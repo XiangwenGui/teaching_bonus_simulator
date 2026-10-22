@@ -1,6 +1,15 @@
 // A local visual teaching-bonus calculator. No payroll data is stored or sent.
 const ROOM={width:1080,height:660};
-const SEATS=[235,345,455,565].flatMap(y=>[195,355,515,675,835].map(x=>({x,y})));
+const SEATS=[];
+function configureRoom(){
+ const phone=window.matchMedia('(max-width:760px)').matches;
+ ROOM.height=phone?1000:660;
+ const rows=phone?[245,395,545,695,845]:[235,345,455,565];
+ const columns=phone?[230,440,650,860]:[195,355,515,675,835];
+ SEATS.splice(0,SEATS.length,...rows.flatMap(y=>columns.map(x=>({x,y}))));
+ document.documentElement.style.setProperty('--room-ratio',`1080 / ${ROOM.height}`);
+}
+configureRoom();
 const COLORS=[0xd89070,0x879eae,0xa2ab75,0xbd94a7,0xd7b15d,0x8db7a3];
 const TEACHER_FACTORS=[.8,1,1.2,1.4,1.5,1.6];
 const COURSES=[
@@ -65,7 +74,7 @@ class Studio extends Phaser.Scene{
  create(){
   document.querySelector('.studio-loading')?.remove();
   this.cameras.main.setBackgroundColor('#e8decd');
-  this.solids=[];this.students=[];this.dynamic=[];
+  this.solids=[];this.students=[];this.dynamic=[];this.badgeParts=null;
   this.drawRoom();SEATS.forEach((p,i)=>this.drawDesk(p,i));
 
   this.refresh();
@@ -82,35 +91,35 @@ class Studio extends Phaser.Scene{
    if(i<selection.students){
     this.drawCourse(p,result.course.art);
     const earns=i>=result.threshold-1;
-    if(earns){const halo=this.add.graphics();halo.fillStyle(0xe0bd6d,.38);halo.fillEllipse(p.x,p.y+37,44,16);halo.lineStyle(1.5,0xd4ad55,.7);halo.strokeEllipse(p.x,p.y+37,44,16);this.dynamic.push(halo);}
-    this.students.push(this.person(p.x,p.y+35,COLORS[i%COLORS.length]).setScale(.7).setDepth(500));
+    if(earns){const halo=this.add.graphics();halo.fillStyle(0xe0bd6d,.38);halo.fillEllipse(p.x,p.y+(ROOM.height>660?51:37),ROOM.height>660?72:44,ROOM.height>660?27:16);halo.lineStyle(ROOM.height>660?3:1.5,0xcba044,.9);halo.strokeEllipse(p.x,p.y+(ROOM.height>660?51:37),ROOM.height>660?72:44,ROOM.height>660?27:16);this.dynamic.push(halo);}
+    this.students.push(this.person(p.x,p.y+(ROOM.height>660?49:35),COLORS[i%COLORS.length]).setScale(ROOM.height>660?1:.7).setDepth(500));
    }
   });
  }
  drawCourse(p,kind){
-  const artwork=this.add.image(p.x,p.y-23,kind).setDisplaySize(62,51);
+  const artwork=this.add.image(p.x,p.y-(ROOM.height>660?33:23),kind).setDisplaySize(ROOM.height>660?88:62,ROOM.height>660?73:51);
   this.dynamic.push(artwork);
  }
   // 所有装饰都用游戏内矢量绘制，无需维护外部美术素材。
   drawRoom(){
     const g=this.add.graphics();
-    g.fillStyle(0xcfc2a9);g.fillRoundedRect(111,39,917,597,16);
-    g.fillStyle(0xf0dfbd);g.fillRoundedRect(103,28,917,597,12);
+    g.fillStyle(0xcfc2a9);g.fillRoundedRect(111,39,917,ROOM.height-63,16);
+    g.fillStyle(0xf0dfbd);g.fillRoundedRect(103,28,917,ROOM.height-63,12);
     g.fillStyle(0xf9efd8);g.fillRoundedRect(103,28,917,135,12);
-    g.fillStyle(0xe9d4b0);g.fillRect(103,150,917,468);
-    for(let row=0;row<11;row++){const y=151+row*44;g.lineStyle(1,0xc6a679,.35);g.lineBetween(104,y,1019,y);for(let col=0;col<7;col++){const x=104+col*150+(row%2)*75;g.lineBetween(x,y,x,y+44);} }
+    g.fillStyle(0xe9d4b0);g.fillRect(103,150,917,ROOM.height-192);
+    for(let row=0;row<Math.floor((ROOM.height-192)/44);row++){const y=151+row*44;g.lineStyle(1,0xc6a679,.35);g.lineBetween(104,y,1019,y);for(let col=0;col<7;col++){const x=104+col*150+(row%2)*75;g.lineBetween(x,y,x,y+44);} }
     g.fillStyle(0xdec49a);g.fillRect(103,145,917,12);g.lineStyle(2,0xc2a580);g.lineBetween(103,157,1020,157);
     // 阳光窗户和柔和的光斑。
     [305,753].forEach(x=>{g.fillStyle(0xd7c39e);g.fillRoundedRect(x-7,48,150,84,8);g.fillStyle(0xe7f0dd);g.fillRect(x,54,136,68);g.fillStyle(0xc4d2ab);g.fillEllipse(x+35,112,68,30);g.fillEllipse(x+100,112,67,35);g.lineStyle(5,0xfff8e6);g.lineBetween(x+68,54,x+68,122);g.lineBetween(x,88,x+136,88);g.fillStyle(0xfffae8);g.fillRoundedRect(x-12,123,160,10,3);g.fillStyle(0xfff4cc,.22);g.fillPoints([{x:x,y:163},{x:x+136,y:163},{x:x+225,y:315},{x:x+20,y:315}],true);});
     // 地毯。
-    g.fillStyle(0xd7d6b2,.6);g.fillRoundedRect(137,170,766,445,25);g.lineStyle(2,0xf5ebd0,.7);g.strokeRoundedRect(147,180,746,425,20);
+    g.fillStyle(0xd7d6b2,.6);g.fillRoundedRect(137,170,766,ROOM.height-215,25);g.lineStyle(2,0xf5ebd0,.7);g.strokeRoundedRect(147,180,746,ROOM.height-235,20);
     // 后墙的画与小柜。
     g.fillStyle(0xb59673);g.fillRoundedRect(533,57,92,69,3);g.fillStyle(0xfff8e6);g.fillRect(539,63,80,57);g.fillStyle(0xe7bf77);g.fillCircle(592,78,11);g.fillStyle(0xa5b493);g.fillTriangle(541,117,567,83,593,117);g.fillStyle(0x879a83);g.fillTriangle(568,117,595,91,617,117);
     this.text(580,139,'make a little magic',9,'#a29277');
     g.fillStyle(0xbda17e);g.fillRoundedRect(925,177,62,129,7);g.fillStyle(0xe0c7a0);g.fillRoundedRect(929,177,54,119,5);[215,255].forEach(y=>{g.lineStyle(2,0xbda17e);g.lineBetween(931,y,981,y);g.fillStyle(0xa58863);g.fillCircle(956,y+18,2);});
     [936,948,962].forEach((x,i)=>{g.fillStyle(COLORS[i]);g.fillRect(x,160-i*4,10,17+i*4);});
     this.solids.push({x:921,y:170,w:73,h:138});
-    this.plant(904,140);this.plant(965,576);
+    this.plant(904,140);this.plant(965,ROOM.height-84);
     // 徽章在每节课开始时更新。
 
   }
@@ -136,7 +145,7 @@ class Studio extends Phaser.Scene{
     const before=new Set(this.children.list);
     this.drawDeskNative({x:0,y:0},i);
     const parts=this.children.list.filter(part=>!before.has(part));
-    this.add.container(p.x,p.y,parts).setScale(.7);
+    this.add.container(p.x,p.y,parts).setScale(ROOM.height>660?1:.7);
   }
   drawDeskNative(p,i){
     const g=this.add.graphics();
@@ -225,7 +234,11 @@ document.querySelectorAll('[data-panel]').forEach(b=>b.addEventListener('click',
 document.querySelector('#sheet-close').onclick=closeSheet;
 sheet.addEventListener('cancel',e=>{e.preventDefault();closeSheet()});
 sheet.addEventListener('click',e=>{if(e.target===sheet){const r=sheet.getBoundingClientRect();if(e.clientY<r.top||e.clientX<r.left||e.clientX>r.right)closeSheet()}});
-mobileMedia.addEventListener('change',()=>{closeSheet();document.body.classList.remove('show-bonus-details');restoreStudioSize()});
+mobileMedia.addEventListener('change',()=>{
+ closeSheet();document.body.classList.remove('show-bonus-details');configureRoom();
+ if(window.studioScene){window.studioScene.scale.resize(ROOM.width,ROOM.height);window.studioScene.scene.restart();}
+ restoreStudioSize();
+});
 document.querySelector('#show-details').onclick=()=>{
  const open=document.body.classList.toggle('show-bonus-details');
  document.querySelector('#show-details').setAttribute('aria-expanded',open);
