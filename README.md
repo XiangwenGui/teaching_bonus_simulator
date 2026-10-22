@@ -2,14 +2,6 @@
 
 A static, English-language visual teaching-bonus calculator. Select a teacher level, course and 0–20 students. No build step, account, backend or database is required.
 
-## Publish with GitHub Pages
-
-1. Extract the ZIP locally. Upload its contents, including the `icons` folder, to the repository root. Do not upload the ZIP itself.
-2. Ensure `index.html` sits directly in the repository root.
-3. Open Settings → Pages. Under Build and deployment, choose Deploy from a branch, then main and / (root). Save.
-4. Wait for the deployment to finish and open the published URL shown by GitHub.
-
-The relative asset paths and manifest start URL support GitHub Pages repository subdirectories. No code changes are needed for a normal project URL.
 
 ## Add to a phone home screen
 
