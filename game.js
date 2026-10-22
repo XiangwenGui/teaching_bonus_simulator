@@ -213,6 +213,7 @@ function closeSheet(){
 function openSheet(index,button){
  closeSheet();
  document.body.classList.remove('show-bonus-details');
+ restoreStudioSize();
  document.querySelector('#show-details').setAttribute('aria-expanded','false');
  document.querySelector('#show-details').textContent='How it adds up ↓';
  activePanel=index;lastPanelButton=button;
@@ -224,11 +225,12 @@ document.querySelectorAll('[data-panel]').forEach(b=>b.addEventListener('click',
 document.querySelector('#sheet-close').onclick=closeSheet;
 sheet.addEventListener('cancel',e=>{e.preventDefault();closeSheet()});
 sheet.addEventListener('click',e=>{if(e.target===sheet){const r=sheet.getBoundingClientRect();if(e.clientY<r.top||e.clientX<r.left||e.clientX>r.right)closeSheet()}});
-mobileMedia.addEventListener('change',()=>{closeSheet();document.body.classList.remove('show-bonus-details')});
+mobileMedia.addEventListener('change',()=>{closeSheet();document.body.classList.remove('show-bonus-details');restoreStudioSize()});
 document.querySelector('#show-details').onclick=()=>{
  const open=document.body.classList.toggle('show-bonus-details');
  document.querySelector('#show-details').setAttribute('aria-expanded',open);
  document.querySelector('#show-details').textContent=open?'Back to studio ↑':'How it adds up ↓';
+ if(!open)restoreStudioSize();
 };
 function mobileSelection(button){
  if(!mobileMedia.matches||!sheet.open)return;
@@ -249,3 +251,8 @@ function mobileSelection(button){
 
 // Cache only the pinned engine. HTML, rule code and CSS stay on the normal network path.
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('engine-cache-sw.js').catch(()=>{});});}
+
+// Wait for the restored panel to participate in layout before Phaser measures it.
+function restoreStudioSize(){
+ requestAnimationFrame(()=>requestAnimationFrame(()=>window.studioScene?.scale.refresh()));
+}

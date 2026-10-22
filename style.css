@@ -10,3 +10,14 @@ main{max-width:1440px}.intro{padding:27px 0}h1{font-size:32px}.explorer{display:
 @media(max-width:760px){.mobile-summary{grid-template-columns:62px 1fr auto;column-gap:10px;min-height:93px;padding:12px 14px;background:#f2e3bd;border-color:#decb96;box-shadow:0 5px 18px #9b7b2d08}.mobile-envelope{grid-column:1;grid-row:1/3;width:62px;height:65px;position:relative}.mobile-envelope .envelope{position:absolute;left:0;top:4px;transform:scale(.58);transform-origin:top left;width:105px;height:90px}.mobile-summary>span{grid-column:2;grid-row:1;font-size:10px;line-height:1.5}.mobile-summary strong{grid-column:3;grid-row:1/3;font-size:32px}.mobile-summary #show-details{grid-column:2;grid-row:2;font-size:10px;line-height:1.5}.mobile-summary .payslip span{font-size:22px}}
 
 #game{position:relative;min-height:100px}.studio-loading{display:flex;align-items:center;justify-content:center;min-height:190px;font-size:13px;color:#95866c;line-height:1.5}.start-label{font-size:8px!important;color:#82926e!important;line-height:1.6}@media(max-width:760px){#sheet-content .start-label{font-size:9px!important}}
+
+/* Keep a stable parent size when the classroom is hidden for bonus details.
+   The canvas must not determine its own parent's height via Phaser FIT styles. */
+#game{aspect-ratio:1080 / 660;min-height:0;overflow:hidden}
+#game canvas{position:absolute;inset:0;width:100%!important;height:100%!important;margin:0!important}
+#game .studio-loading{position:absolute;inset:0;min-height:0}
+
+/* Reserve a stable drawing area even when a details view temporarily hides it. */
+#game{position:relative;aspect-ratio:1080 / 660;min-height:0}
+#game canvas{position:absolute!important;inset:0;width:100%!important;height:100%!important;margin:0!important}
+#game .studio-loading{position:absolute;inset:0;min-height:0}
