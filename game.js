@@ -7,7 +7,8 @@ const COURSES=[
  {id:'exp',name:'Exp',factor:3,threshold:4,art:'sun'},
  {id:'fnd',name:'Fnd',factor:2.4,threshold:5,art:'mountain'},
  {id:'adv',name:'Adv',factor:2.25,threshold:5,art:'landscape'},
- {id:'digital12',name:'Digital 1 / 2',factor:2.625,threshold:4,art:'tablet'},
+ {id:'d1',name:'Digital 1',factor:2.625,threshold:4,art:'tablet'},
+ {id:'d2',name:'Digital 2',factor:2.625,threshold:5,art:'tablet'},
  {id:'digital',name:'Digital',factor:2.25,threshold:5,art:'character'},
  {id:'sketch',name:'Sket / Draw',factor:2.25,threshold:5,art:'sketch'},
  {id:'painting',name:'Painting',factor:3,threshold:5,art:'vase'},
@@ -17,7 +18,7 @@ const COURSES=[
 const selection={teacher:1,course:'exp',digital:'d1',students:0};
 function calculateBonus(teacher,courseId,students,digital='d1'){
  const course=COURSES.find(c=>c.id===courseId);
- const threshold=courseId==='digital12'&&digital==='d2'?5:course.threshold;
+ const threshold=course.threshold;
  const counted=Math.max(0,students-threshold+1);
  const factor=TEACHER_FACTORS[teacher-1];
  return {course,threshold,counted,factor,amount:counted*factor*course.factor};
@@ -58,10 +59,11 @@ function icon(kind){
 class Studio extends Phaser.Scene{
  preload(){
   // One source of artwork for both the HTML choices and the classroom.
-  const kinds=[...COURSES.map(c=>c.art),...TEACHER_FACTORS.map((_,i)=>'t'+(i+1))];
+  const kinds=[...new Set([...COURSES.map(c=>c.art),...TEACHER_FACTORS.map((_,i)=>'t'+(i+1))])];
   kinds.forEach(kind=>this.load.svg(kind,'data:image/svg+xml;base64,'+btoa(icon(kind)),{width:288,height:264}));
  }
  create(){
+  document.querySelector('.studio-loading')?.remove();
   this.cameras.main.setBackgroundColor('#e8decd');
   this.solids=[];this.students=[];this.dynamic=[];
   this.drawRoom();SEATS.forEach((p,i)=>this.drawDesk(p,i));
@@ -157,7 +159,7 @@ class Studio extends Phaser.Scene{
 }
 function renderControls(){
  document.querySelector('#teacher-options').innerHTML=TEACHER_FACTORS.map((f,i)=>`<button data-teacher="${i+1}" aria-pressed="${selection.teacher===i+1}">${icon('t'+(i+1))}<strong>T${i+1}</strong><small>×${f.toFixed(1)}</small></button>`).join('');
- document.querySelector('#course-options').innerHTML=COURSES.map(c=>`<button data-course="${c.id}" aria-pressed="${selection.course===c.id}">${icon(c.art)}<strong>${c.name}</strong><small>×${c.factor}</small></button>`).join('');
+ document.querySelector('#course-options').innerHTML=COURSES.map(c=>`<button data-course="${c.id}" aria-pressed="${selection.course===c.id}">${icon(c.art)}<strong>${c.name}</strong><small>×${c.factor}</small><small class="start-label">Bonus from student ${c.threshold}</small></button>`).join('');
  document.querySelector('#student-options').innerHTML=Array.from({length:21},(_,n)=>`<button data-students="${n}" aria-pressed="${selection.students===n}">${n}</button>`).join('');
 }
 function refreshUI(){
@@ -167,7 +169,7 @@ function refreshUI(){
  document.querySelectorAll('[data-students]').forEach(b=>b.setAttribute('aria-pressed',Number(b.dataset.students)===selection.students));
  document.querySelectorAll('[data-digital]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.digital===selection.digital));
  document.querySelector('#digital-choice').hidden=selection.course!=='digital12';
- const name=selection.course==='digital12'?(selection.digital==='d1'?'Digital 1':'Digital 2'):r.course.name;
+ const name=r.course.name;
  document.querySelector('#room-label').textContent=`T${selection.teacher} · ${name} · ${selection.students} students`;
  document.querySelector('#threshold').textContent=`Bonus starts with student ${r.threshold}`;
  document.querySelector('#count-note').textContent=`${r.counted} ${r.counted===1?'student counts':'students count'} toward your bonus`;
@@ -244,3 +246,6 @@ function mobileSelection(button){
  const y=room.top+room.height*87/ROOM.height;
  flying.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${x-from.left-from.width/2}px,${y-from.top-from.height/2}px) scale(.55)`,opacity:1}],{duration:560,easing:'cubic-bezier(.2,.7,.3,1)'}).onfinish=()=>{flying.remove();document.querySelector('#game').animate([{filter:'brightness(1.08)'},{filter:'brightness(1)'}],{duration:350})};
 }
+
+// Cache only the pinned engine. HTML, rule code and CSS stay on the normal network path.
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('engine-cache-sw.js').catch(()=>{});});}
