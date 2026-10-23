@@ -29,8 +29,12 @@ function calculateBonus(teacher,courseId,students,digital='d1'){
  const course=COURSES.find(c=>c.id===courseId);
  const threshold=course.threshold;
  const counted=Math.max(0,students-threshold+1);
+ const standardCount=Math.max(0,Math.min(students,9)-threshold+1);
+ const extraCount=Math.max(0,students-9);
+ const weightedCount=standardCount+extraCount*1.5;
  const factor=TEACHER_FACTORS[teacher-1];
- return {course,threshold,counted,factor,amount:counted*factor*course.factor};
+ const amount=weightedCount*factor*course.factor;
+ return {course,threshold,counted,standardCount,extraCount,weightedCount,factor,amount,annual:amount*37};
 }
 // Tiny SVG pictograms use the same shapes and colors as the classroom.
 function icon(kind){
@@ -189,8 +193,10 @@ function refreshUI(){
  document.querySelector('#mobile-students').textContent=selection.students;
  document.querySelector('#both-classes').textContent=(r.amount*2).toFixed(2);
  document.querySelector('#one-class').textContent=r.amount.toFixed(2);
- document.querySelector('#formula').innerHTML=`<div><b>${r.counted}</b><span>counted students</span><small>${selection.students} − ${r.threshold-1}${selection.students<r.threshold-1?' → 0':''}</small></div><i>×</i><div><b>${r.factor.toFixed(1)}</b><span>T${selection.teacher} factor</span></div><i>×</i><div><b>${r.course.factor}</b><span>${name} factor</span></div><i>=</i><div class="formula-total"><b>${r.amount.toFixed(2)}</b><span>this class</span></div>`;
- document.querySelector('#eligibility').textContent=r.counted?'Golden circles mark the students included in this bonus.':`Add ${r.threshold-selection.students} more ${r.threshold-selection.students===1?'student':'students'} to reach the bonus starting point.`;
+ document.querySelector('#annual-total').textContent=r.annual.toFixed(2);
+ document.querySelector('#annual-formula').textContent=`${r.amount.toFixed(2)} per class × 37 weekly classes. Calculated before display rounding.`;
+ document.querySelector('#formula').innerHTML=`<div><b>${r.weightedCount}</b><span>weighted students</span><small>${r.standardCount} × 1 + ${r.extraCount} × 1.5</small></div><i>×</i><div><b>${r.factor.toFixed(1)}</b><span>T${selection.teacher} factor</span></div><i>×</i><div><b>${r.course.factor}</b><span>${name} factor</span></div><i>=</i><div class="formula-total"><b>${r.amount.toFixed(2)}</b><span>this class</span></div>`;
+ document.querySelector('#eligibility').textContent=r.counted?`Golden circles mark counted students. ${r.extraCount?`${r.extraCount} students beyond 9 receive the ×1.5 factor.`:'Students beyond 9 receive a ×1.5 factor.'}`:`Add ${r.threshold-selection.students} more ${r.threshold-selection.students===1?'student':'students'} to reach the bonus starting point.`;
  window.studioScene?.refresh();
 }
 renderControls();
